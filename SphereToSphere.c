@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "raymath.h"
+#include <stdio.h>
 
 typedef struct {
     Vector3 position;
@@ -8,6 +9,28 @@ typedef struct {
     Vector3 velocity;
     float mass;
 }Sphere;
+
+bool SphereDetection()
+{    
+    Vector3 p1 = spheres[0].position;
+    Vector3 p2 = spheres[1].position;
+    float r1 = spheres[0].radius;
+    float r2 = spheres[1].radius;
+    Vector3 v1 = spheres[0].velocity;
+    Vector3 v2 = spheres[1].velocity;
+    float a = Vector3LengthSqr(Vector3Scale(Vector3Subtract(v1, v2), GetFrameTime()));
+    float b = Vector3DotProduct(Vector3Subtract(p1, p2), Vector3Scale(Vector3Subtract(v1, v2), GetFrameTime() * 2));
+    float c = (Vector3LengthSqr(Vector3Scale(Vector3Subtract(p1, p2), (r1 + r2) * (r1 + r2))));
+    float t = (-b - (b * b - 4 * a * c)) / (2 * a);
+
+    if (t < 1 && t > 0)
+    {
+        printf("%f\nHit\n");
+        return true;
+    }
+    
+    return false;
+}
 
 int main(void)
 {
@@ -32,16 +55,6 @@ int main(void)
     spheres[1].velocity = (Vector3){-1.0f, 0.0f, 0.0f};
     spheres[1].mass = (float){1.0f};
 
-    Vector3 p1 = spheres[0].position;
-    Vector3 p2 = spheres[1].position;
-    float r1 = spheres[0].radius;
-    float r2 = spheres[1].radius;
-    Vector3 v1 = spheres[0].velocity;
-    Vector3 v2 = spheres[1].velocity;
-    float a = (Vector3LengthSqr(Vector3Scale(Vector3Subtract(v1,v2),GetFrameTime())));
-    float b = Vector3CrossProduct()
-    
-
     //Unity code
     //Vector3 p1 = spheres[j].transform.position;
     //Vector3 p2 = spheres[i].transform.position;
@@ -61,6 +74,8 @@ int main(void)
     //    return true;
     //}
 
+    //transform.position += velocity * Time.deltaTime;
+
     while (!WindowShouldClose())
     {
         BeginDrawing();
@@ -73,6 +88,7 @@ int main(void)
             {
                DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].sphereColour);
                DrawSphereWires(spheres[i].position, spheres[i].radius, 16, 16, BLACK);
+               SphereDetection();               
             }
             
             
