@@ -36,7 +36,12 @@ bool SphereDetection(Sphere sphere1, Sphere sphere2)
 
 void SphereResponse(Sphere *sphere1, Sphere *sphere2)
 {
-
+    Vector3 v1 = sphere1->velocity;
+    float c = sphere2->radius / 2;
+    Vector3 s = Vector3Add(sphere1->position, sphere2->position);
+    Vector3 g = Vector3Subtract(sphere2->velocity, s);
+    Vector3 q = Vector3Angle(v1, g);
+    Vector3 co = cosf(q, g / v1);
 }
 
 int main(void)
@@ -65,6 +70,8 @@ int main(void)
     while (!WindowShouldClose())
     {
         SphereDetection(spheres[0], spheres[1]);  
+        
+        SphereResponse(&spheres[0], &spheres[1]);
         
         BeginDrawing();
 
