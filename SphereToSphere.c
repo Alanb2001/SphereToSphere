@@ -14,41 +14,36 @@ typedef struct {
 
 bool SphereDetection(Sphere *sphere1, Sphere *sphere2)
 {   
-    for(int i = 0; i < numSpheres; i++)
+    Vector3 p1 = sphere1->position;
+    Vector3 p2 = sphere2->position;
+    float r1 = sphere1->radius;
+    float r2 = sphere2->radius;
+    Vector3 v1 = sphere1->velocity;
+    Vector3 v2 = sphere2->velocity;
+    float a = Vector3LengthSqr(Vector3Scale(Vector3Subtract(v1, v2), GetFrameTime()));
+    float b = Vector3DotProduct(Vector3Subtract(p1, p2), Vector3Scale(Vector3Subtract(v1, v2), GetFrameTime() * 2));
+    float c = (Vector3LengthSqr(Vector3Scale(Vector3Subtract(p1, p2), (r1 + r2) * (r1 + r2))));
+    float t = (-b - (b * b - 4 * a * c)) / (2 * a);
+        
+    if (t < 1 && t > 0)
     {
-        for(int j = 0; j < numSpheres; j++) 
-        {
-            Vector3 p1 = sphere1[i].position;
-            Vector3 p2 = sphere2[j].position;
-            float r1 = sphere1[i].radius;
-            float r2 = sphere2[j].radius;
-            Vector3 v1 = sphere1[i].velocity;
-            Vector3 v2 = sphere2[j].velocity;
-            float a = Vector3LengthSqr(Vector3Scale(Vector3Subtract(v1, v2), GetFrameTime()));
-            float b = Vector3DotProduct(Vector3Subtract(p1, p2), Vector3Scale(Vector3Subtract(v1, v2), GetFrameTime() * 2));
-            float c = (Vector3LengthSqr(Vector3Scale(Vector3Subtract(p1, p2), (r1 + r2) * (r1 + r2))));
-            float t = (-b - (b * b - 4 * a * c)) / (2 * a);
-                
-             if (t < 1 && t > 0)
-             {
-                 printf("%f\nHit\n",t);
-                 return true;
-             }
-        }
+        printf("%f\nHit\n",t);
+        return true;
     }
 
     return false;
 }
 
 void SphereResponse(Sphere *sphere1, Sphere *sphere2)
-{
+{   
    //Vector3 v1 = sphere1->velocity;
    //float c = sphere2->radius / 2;
    //Vector3 s = Vector3Add(sphere1->position, sphere2->position);
    //Vector3 p = Vector3AddValue(s, c);
    //Vector3 g = Vector3Subtract(sphere2->velocity, p);
    //Vector2 q = Vector3Angle(v1, g);
-   //float co = cosf(q/ g);  
+   //float co = cos(c) / (sphere1->radius + sphere2->radius);
+   printf("\nResponse\n");
 }
 
 int main(void)
@@ -73,24 +68,25 @@ int main(void)
     spheres[1].velocity = (Vector3){1.0f, 0.0f, 0.0f};
     spheres[1].mass = (float){1.0f};
 
-    spheres[2].position = (Vector3){5.0f, 5.0f, 0.0f};
-    spheres[2].radius = (float){1.5f};
-    spheres[2].sphereColour = YELLOW;
-    spheres[2].velocity = (Vector3){-1.0f, 0.0f, 0.0f};
-    spheres[2].mass = (float){1.0f};
-    
-    spheres[3].position = (Vector3){-5.0f, 5.0f, 0.0f};
-    spheres[3].radius = (float){1.5f};
-    spheres[3].sphereColour = PINK;
-    spheres[3].velocity = (Vector3){1.0f, 0.0f, 0.0f};
-    spheres[3].mass = (float){1.0f};
+    //spheres[2].position = (Vector3){5.0f, 5.0f, 0.0f};
+    //spheres[2].radius = (float){1.5f};
+    //spheres[2].sphereColour = YELLOW;
+    //spheres[2].velocity = (Vector3){-1.0f, 0.0f, 0.0f};
+    //spheres[2].mass = (float){1.0f};
+    //
+    //spheres[3].position = (Vector3){-5.0f, 5.0f, 0.0f};
+    //spheres[3].radius = (float){1.5f};
+    //spheres[3].sphereColour = PINK;
+    //spheres[3].velocity = (Vector3){1.0f, 0.0f, 0.0f};
+    //spheres[3].mass = (float){1.0f};
     
     while (!WindowShouldClose())
     {
-        SphereDetection(&spheres[0], &spheres[1]);  
-        
-        SphereResponse(&spheres[0], &spheres[1]);
-        
+        if(SphereDetection(&spheres[0], &spheres[1]) == true)
+        {
+           SphereResponse(&spheres[0], &spheres[1]);
+        }
+     
         BeginDrawing();
 
             ClearBackground(RAYWHITE);
