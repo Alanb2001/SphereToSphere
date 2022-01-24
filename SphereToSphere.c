@@ -10,9 +10,16 @@ typedef struct {
     float mass;
 }Sphere;
 
-    const int numSpheres = 2;
+typedef struct {
+    Vector3 position;
+    Vector2 size;
+    Color planeColour;  
+}Plane;
 
-void SphereDetection(Sphere *sphere1, Sphere *sphere2)
+    const int numSpheres = 2;
+    const int numPlanes = 1;
+
+void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
 {   
     Vector3 p1 = sphere1->position;
     Vector3 p2 = sphere2->position;
@@ -72,6 +79,33 @@ void SphereDetection(Sphere *sphere1, Sphere *sphere2)
     }
 }
 
+void SphereToPlane(Sphere *sphere, Plane *plane)
+{
+    Vector3 n = plane->position;
+    Vector3 v = sphere->velocity;
+    Vector3 k = plane->position;
+    Vector3 p = Vector3Add(k, sphere->position);
+    //float s1 = Vector3Angle(n, -v);
+    Vector2 q1 = Vector3Angle(n, p);
+    Vector2 q2 = Vector3Angle(p, k);
+    //Vector3 q3 = Vector3Add(q1, q2);
+    
+    float r = sphere->radius;
+    
+    //float d = Mathf.Sin(q2) % p.sqrMagnitude;
+    //float s = Vector3.Angle(v, -n);
+    //float vc = (d - r) / Mathf.Cos(s);
+    
+    //if (q3 < 90 && vc <= v.magnitude)
+    //{
+    //    print(q3);
+    //    print(vc);
+    //    print(v);
+    //    print("Hit Plane");
+    //    return;
+    //}
+}
+
 int main(void)
 {
     const int screenWidth = 800;
@@ -80,6 +114,11 @@ int main(void)
     InitWindow(screenWidth, screenHeight, "SphereToSphere");
 
     Camera camera = { { 0.0f, 10.0f, 10.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, 45.0f, 0 };
+    
+    Plane planes[numPlanes];
+    planes[0].position = (Vector3){0.0f, 0.0f, 0.0f};
+    planes[0].size = (Vector2){1.5f, 1.5f};
+    planes[0].planeColour = RED;
     
     Sphere spheres[numSpheres];
     spheres[0].position = (Vector3){5.0f, 0.0f, 0.0f};
@@ -99,7 +138,7 @@ int main(void)
     //spheres[2].sphereColour = YELLOW;
     //spheres[2].velocity = (Vector3){-2.0f, -0.5f, 0.0f};
     //spheres[2].mass = (float){5.0f};
-    
+    //
     //spheres[3].position = (Vector3){-5.0f, 5.0f, 0.0f};
     //spheres[3].radius = (float){0.5f};
     //spheres[3].sphereColour = PINK;
@@ -112,11 +151,11 @@ int main(void)
         //{
         //    for (int j = i + 1; j < numSpheres; j++)
         //    {
-        //        SphereDetection(&spheres[i], &spheres[j]);
+        //        SphereToSphere(&spheres[i], &spheres[j]);
         //    }
         //}
 
-        SphereDetection(&spheres[0], &spheres[1]);
+        SphereToSphere(&spheres[0], &spheres[1]);
         
         BeginDrawing();
 
@@ -127,6 +166,7 @@ int main(void)
             for(int i = 0; i < numSpheres; i++)
             {
                 DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].sphereColour);
+                DrawPlane(planes[0].position, planes[0].size, planes[0].planeColour);
                 DrawSphereWires(spheres[i].position, spheres[i].radius, 16, 16, BLACK);
                 spheres[i].position = Vector3Add(spheres[i].position, Vector3Scale(spheres[i].velocity, GetFrameTime()));
             }
