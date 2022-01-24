@@ -16,7 +16,7 @@ typedef struct {
     Color planeColour;  
 }Plane;
 
-    const int numSpheres = 2;
+    const int numSpheres = 4;
     const int numPlanes = 1;
 
 void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
@@ -32,8 +32,8 @@ void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
     float c = (Vector3LengthSqr(Vector3Subtract(p1, p2)) - (r1 + r2) * (r1 + r2));
  
     //printf("%f, %f, %f\n ", a, b, c);
-    if (b * b - 4 * a * c < 0)         
-        return;
+    //if (b * b - 4 * a * c < 0)         
+    //    return;
                 
     float t1 = (-b - sqrtf(b * b - 4 * a * c)) / (2 * a);           
   
@@ -50,9 +50,11 @@ void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
         
         sphere1->position = Vector3Add(sphere1->position, Vector3Scale(sphere1->velocity, GetFrameTime() * t1));
         sphere2->position = Vector3Add(sphere2->position, Vector3Scale(sphere2->velocity, GetFrameTime() * t1));
+        
         Vector3 g = Vector3Normalize(Vector3Subtract(sphere2->position, sphere1->position));
         float q = Vector3DotProduct(v1, g) * (Vector3Length(v1) / sphere2->mass);
-        float q2 = Vector3DotProduct(v2, g) * (Vector3Length(v2) / sphere1->mass);  
+        float q2 = Vector3DotProduct(v2, g) * (Vector3Length(v2) / sphere1->mass);
+        
         sphere1->velocity = Vector3Add(sphere1->velocity, Vector3Scale(g, q2));        
         sphere1->velocity = (Vector3) 
         { 
@@ -60,13 +62,26 @@ void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
         (sphere1->velocity.y * sphere1->mass + sphere2->velocity.y * sphere2->mass) / sphere1->mass,
         (sphere1->velocity.z * sphere1->mass + sphere2->velocity.z * sphere2->mass) / sphere1->mass
         };
-        sphere2->velocity = Vector3Add(sphere2->velocity, Vector3Scale(g, q)); 
-        sphere2->velocity = (Vector3) 
-        { 
-        (sphere2->velocity.x * sphere2->mass - sphere1->velocity.x * sphere1->mass) / sphere2->mass,
-        (sphere2->velocity.y * sphere2->mass - sphere1->velocity.y * sphere1->mass) / sphere2->mass,
-        (sphere2->velocity.z * sphere2->mass - sphere1->velocity.z * sphere1->mass) / sphere2->mass
-        };
+        
+        float momentumX1 = sphere1->velocity.x * sphere1->mass;
+        float momentumY1 = sphere1->velocity.y * sphere1->mass;
+        float momentumZ1 = sphere1->velocity.z * sphere1->mass;
+                    
+        float momentumX2 = momentumX - momentumX1;
+        float momentumY2 = momentumY - momentumY1;
+        float momentumZ2 = momentumZ - momentumZ1;
+                                                                 
+        sphere2->velocity.x = momentumX2 / sphere2->mass;                     
+        sphere2->velocity.y = momentumY2 / sphere2->mass; 
+        sphere2->velocity.z = momentumZ2 / sphere2->mass;
+        
+        //sphere2->velocity = Vector3Add(sphere2->velocity, Vector3Scale(g, q)); 
+        //sphere2->velocity = (Vector3) 
+        //{ 
+        //(sphere2->velocity.x * sphere2->mass - sphere1->velocity.x * sphere1->mass) / sphere2->mass,
+        //(sphere2->velocity.y * sphere2->mass - sphere1->velocity.y * sphere1->mass) / sphere2->mass,
+        //(sphere2->velocity.z * sphere2->mass - sphere1->velocity.z * sphere1->mass) / sphere2->mass
+        //};
                
         momentumX = sphere1->velocity.x * sphere1->mass + sphere2->velocity.x * sphere2->mass;
         momentumY = sphere1->velocity.y * sphere1->mass + sphere2->velocity.y * sphere2->mass;
@@ -133,29 +148,29 @@ int main(void)
     spheres[1].velocity = (Vector3){2.0f, -0.5f, 0.0f};
     spheres[1].mass = (float){20.0f};
 
-    //spheres[2].position = (Vector3){5.0f, 5.0f, 0.0f};
-    //spheres[2].radius = (float){1.5f};
-    //spheres[2].sphereColour = YELLOW;
-    //spheres[2].velocity = (Vector3){-2.0f, -0.5f, 0.0f};
-    //spheres[2].mass = (float){5.0f};
-    //
-    //spheres[3].position = (Vector3){-5.0f, 5.0f, 0.0f};
-    //spheres[3].radius = (float){0.5f};
-    //spheres[3].sphereColour = PINK;
-    //spheres[3].velocity = (Vector3){2.0f, -0.5f, 0.0f};
-    //spheres[3].mass = (float){1.0f};
+    spheres[2].position = (Vector3){5.0f, 5.0f, 0.0f};
+    spheres[2].radius = (float){1.5f};
+    spheres[2].sphereColour = YELLOW;
+    spheres[2].velocity = (Vector3){-2.0f, -0.5f, 0.0f};
+    spheres[2].mass = (float){5.0f};
+    
+    spheres[3].position = (Vector3){-5.0f, 5.0f, 0.0f};
+    spheres[3].radius = (float){0.5f};
+    spheres[3].sphereColour = PINK;
+    spheres[3].velocity = (Vector3){2.0f, -0.5f, 0.0f};
+    spheres[3].mass = (float){1.0f};
     
     while (!WindowShouldClose())
     {
-        //for (int i = 0; i < numSpheres - 1 ; i++)
-        //{
-        //    for (int j = i + 1; j < numSpheres; j++)
-        //    {
-        //        SphereToSphere(&spheres[i], &spheres[j]);
-        //    }
-        //}
+        for (int i = 0; i < numSpheres - 1 ; i++)
+        {
+            for (int j = i + 1; j < numSpheres; j++)
+            {
+                SphereToSphere(&spheres[i], &spheres[j]);
+            }
+        }
 
-        SphereToSphere(&spheres[0], &spheres[1]);
+        //SphereToSphere(&spheres[0], &spheres[1]);
         
         BeginDrawing();
 
