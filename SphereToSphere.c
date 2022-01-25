@@ -35,27 +35,27 @@ void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
     //if (b * b - 4 * a * c < 0)         
     //    return;
                 
-    float t1 = (-b - sqrtf(b * b - 4 * a * c)) / (2 * a);           
+    float t = (-b - sqrtf(b * b - 4 * a * c)) / (2 * a);           
   
-    if (t1 < 1 && t1 > 0)
+    if (t < 1 && t > 0)
     {
-        printf("%f\nHit\n",t1);
+        printf("%f\nHit\n",t);
         
         float momentumX = sphere1->velocity.x * sphere1->mass + sphere2->velocity.x * sphere2->mass;
         float momentumY = sphere1->velocity.y * sphere1->mass + sphere2->velocity.y * sphere2->mass;
         float momentumZ = sphere1->velocity.z * sphere1->mass + sphere2->velocity.z * sphere2->mass;
-        printf("%f %f %f\n",momentumX,momentumY,momentumZ);
-        float momentum = Vector3Length(Vector3Add(Vector3Scale(sphere1->velocity,sphere1->mass),Vector3Scale(sphere2->velocity,sphere2->mass)));
-        printf("%f\n",momentum);  
+        //printf("%f %f %f\n",momentumX,momentumY,momentumZ);
+        //float momentum = Vector3Length(Vector3Add(Vector3Scale(sphere1->velocity,sphere1->mass),Vector3Scale(sphere2->velocity,sphere2->mass)));
+        //printf("%f\n",momentum);  
         
-        sphere1->position = Vector3Add(sphere1->position, Vector3Scale(sphere1->velocity, GetFrameTime() * t1));
-        sphere2->position = Vector3Add(sphere2->position, Vector3Scale(sphere2->velocity, GetFrameTime() * t1));
+        //sphere1->position = Vector3Add(sphere1->position, Vector3Scale(sphere1->velocity, GetFrameTime() * t1));
+        //sphere2->position = Vector3Add(sphere2->position, Vector3Scale(sphere2->velocity, GetFrameTime() * t1));
         
         Vector3 g = Vector3Normalize(Vector3Subtract(sphere2->position, sphere1->position));
-        float q = Vector3DotProduct(v1, g) * (Vector3Length(v1) / sphere2->mass);
-        float q2 = Vector3DotProduct(v2, g) * (Vector3Length(v2) / sphere1->mass);
+        //float q = Vector3DotProduct(v1, g) * (Vector3Length(v1) / sphere2->mass);
+        float q = Vector3DotProduct(v2, g) * (Vector3Length(v2) / sphere1->mass);
         
-        sphere1->velocity = Vector3Add(sphere1->velocity, Vector3Scale(g, q2));        
+        sphere1->velocity = Vector3Add(sphere1->velocity, Vector3Scale(g, q));        
         sphere1->velocity = (Vector3) 
         { 
         (sphere1->velocity.x * sphere1->mass + sphere2->velocity.x * sphere2->mass) / sphere1->mass,
@@ -83,12 +83,12 @@ void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
         //(sphere2->velocity.z * sphere2->mass - sphere1->velocity.z * sphere1->mass) / sphere2->mass
         //};
                
-        momentumX = sphere1->velocity.x * sphere1->mass + sphere2->velocity.x * sphere2->mass;
-        momentumY = sphere1->velocity.y * sphere1->mass + sphere2->velocity.y * sphere2->mass;
-        momentumZ = sphere1->velocity.z * sphere1->mass + sphere2->velocity.z * sphere2->mass;
-        printf("%f %f %f\n",momentumX,momentumY,momentumZ);
-        momentum = Vector3Length(Vector3Add(Vector3Scale(sphere1->velocity,sphere1->mass),Vector3Scale(sphere2->velocity,sphere2->mass)));
-        printf("%f\n",momentum);  
+        //momentumX = sphere1->velocity.x * sphere1->mass + sphere2->velocity.x * sphere2->mass;
+        //momentumY = sphere1->velocity.y * sphere1->mass + sphere2->velocity.y * sphere2->mass;
+        //momentumZ = sphere1->velocity.z * sphere1->mass + sphere2->velocity.z * sphere2->mass;
+        //printf("%f %f %f\n",momentumX,momentumY,momentumZ);
+        //momentum = Vector3Length(Vector3Add(Vector3Scale(sphere1->velocity,sphere1->mass),Vector3Scale(sphere2->velocity,sphere2->mass)));
+        //printf("%f\n",momentum);  
         
         return;
     }
@@ -155,10 +155,10 @@ int main(void)
     spheres[2].mass = (float){5.0f};
     
     spheres[3].position = (Vector3){-5.0f, 5.0f, 0.0f};
-    spheres[3].radius = (float){0.5f};
+    spheres[3].radius = (float){2.5f};
     spheres[3].sphereColour = PINK;
-    spheres[3].velocity = (Vector3){2.0f, -0.5f, 0.0f};
-    spheres[3].mass = (float){1.0f};
+    spheres[3].velocity = (Vector3){2.0f, 0.0f, 0.0f};
+    spheres[3].mass = (float){2.0f};
     
     while (!WindowShouldClose())
     {
