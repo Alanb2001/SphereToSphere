@@ -8,15 +8,17 @@ typedef struct {
     Color sphereColour;  
     Vector3 velocity;
     float mass;
+    float restitution;
 }Sphere;
 
 typedef struct {
-    Vector3 position;
-    Vector2 size;
+    Vector3 position1;
+    Vector3 position2;
+    Vector3 position3;
     Color planeColour;  
 }Plane;
 
-    const int numSpheres = 4;
+    const int numSpheres = 1;
     const int numPlanes = 1;
 
 void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
@@ -30,65 +32,30 @@ void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
     float a = Vector3LengthSqr(Vector3Scale(Vector3Subtract(v1, v2), GetFrameTime()));
     float b = Vector3DotProduct(Vector3Subtract(p1, p2), Vector3Scale(Vector3Subtract(v1, v2), GetFrameTime() * 2));
     float c = (Vector3LengthSqr(Vector3Subtract(p1, p2)) - (r1 + r2) * (r1 + r2));
- 
-    //printf("%f, %f, %f\n ", a, b, c);
-    //if (b * b - 4 * a * c < 0)         
-    //    return;
-                
-    float t = (-b - sqrtf(b * b - 4 * a * c)) / (2 * a);           
-  
+    float t = (-b - sqrtf(b * b - 4 * a * c)) / (2 * a);      
+
     if (t < 1 && t > 0)
     {
-        printf("%f\nHit\n",t);
+        printf("%f\nHit\n", t);
         
-        float momentumX = sphere1->velocity.x * sphere1->mass + sphere2->velocity.x * sphere2->mass;
-        float momentumY = sphere1->velocity.y * sphere1->mass + sphere2->velocity.y * sphere2->mass;
-        float momentumZ = sphere1->velocity.z * sphere1->mass + sphere2->velocity.z * sphere2->mass;
-        //printf("%f %f %f\n",momentumX,momentumY,momentumZ);
-        //float momentum = Vector3Length(Vector3Add(Vector3Scale(sphere1->velocity,sphere1->mass),Vector3Scale(sphere2->velocity,sphere2->mass)));
-        //printf("%f\n",momentum);  
+        Vector3 momentum = Vector3Add(Vector3Scale(sphere1->velocity,sphere1->mass),Vector3Scale(sphere2->velocity,sphere2->mass));
+        printf("%f\nBefore collision ^\n", Vector3Length(momentum));  
         
-        //sphere1->position = Vector3Add(sphere1->position, Vector3Scale(sphere1->velocity, GetFrameTime() * t1));
-        //sphere2->position = Vector3Add(sphere2->position, Vector3Scale(sphere2->velocity, GetFrameTime() * t1));
+        Vector3 g = Vector3Normalize(Vector3Subtract(sphere2->position, sphere1->position));       
+        Vector3 vr = Vector3Subtract(sphere1->velocity, sphere2->velocity);
+        float vj = -(1 + sphere1->restitution * sphere2-> restitution) * Vector3DotProduct(vr, g);     
+        float j = vj / (1 / sphere1->mass + 1 / sphere2->mass);
         
-        Vector3 g = Vector3Normalize(Vector3Subtract(sphere2->position, sphere1->position));
-        //float q = Vector3DotProduct(v1, g) * (Vector3Length(v1) / sphere2->mass);
-        float q = Vector3DotProduct(v2, g) * (Vector3Length(v2) / sphere1->mass);
+        sphere1->velocity = Vector3Add(sphere1->velocity, Vector3Scale(g, j * 1 / sphere1->mass));
         
-        sphere1->velocity = Vector3Add(sphere1->velocity, Vector3Scale(g, q));        
-        sphere1->velocity = (Vector3) 
-        { 
-        (sphere1->velocity.x * sphere1->mass + sphere2->velocity.x * sphere2->mass) / sphere1->mass,
-        (sphere1->velocity.y * sphere1->mass + sphere2->velocity.y * sphere2->mass) / sphere1->mass,
-        (sphere1->velocity.z * sphere1->mass + sphere2->velocity.z * sphere2->mass) / sphere1->mass
-        };
-        
-        float momentumX1 = sphere1->velocity.x * sphere1->mass;
-        float momentumY1 = sphere1->velocity.y * sphere1->mass;
-        float momentumZ1 = sphere1->velocity.z * sphere1->mass;
+        Vector3 momentum1 = Vector3Scale(sphere1->velocity, sphere1->mass);
                     
-        float momentumX2 = momentumX - momentumX1;
-        float momentumY2 = momentumY - momentumY1;
-        float momentumZ2 = momentumZ - momentumZ1;
-                                                                 
-        sphere2->velocity.x = momentumX2 / sphere2->mass;                     
-        sphere2->velocity.y = momentumY2 / sphere2->mass; 
-        sphere2->velocity.z = momentumZ2 / sphere2->mass;
-        
-        //sphere2->velocity = Vector3Add(sphere2->velocity, Vector3Scale(g, q)); 
-        //sphere2->velocity = (Vector3) 
-        //{ 
-        //(sphere2->velocity.x * sphere2->mass - sphere1->velocity.x * sphere1->mass) / sphere2->mass,
-        //(sphere2->velocity.y * sphere2->mass - sphere1->velocity.y * sphere1->mass) / sphere2->mass,
-        //(sphere2->velocity.z * sphere2->mass - sphere1->velocity.z * sphere1->mass) / sphere2->mass
-        //};
-               
-        //momentumX = sphere1->velocity.x * sphere1->mass + sphere2->velocity.x * sphere2->mass;
-        //momentumY = sphere1->velocity.y * sphere1->mass + sphere2->velocity.y * sphere2->mass;
-        //momentumZ = sphere1->velocity.z * sphere1->mass + sphere2->velocity.z * sphere2->mass;
-        //printf("%f %f %f\n",momentumX,momentumY,momentumZ);
-        //momentum = Vector3Length(Vector3Add(Vector3Scale(sphere1->velocity,sphere1->mass),Vector3Scale(sphere2->velocity,sphere2->mass)));
-        //printf("%f\n",momentum);  
+        Vector3 momentum2 = Vector3Subtract(momentum, momentum1);
+             
+        sphere2->velocity = Vector3Scale(momentum2, 1 / sphere2->mass);                     
+
+        momentum = Vector3Add(Vector3Scale(sphere1->velocity,sphere1->mass),Vector3Scale(sphere2->velocity,sphere2->mass));
+        printf("%f\nAfter collision ^\n", Vector3Length(momentum));  
         
         return;
     }
@@ -96,27 +63,42 @@ void SphereToSphere(Sphere *sphere1, Sphere *sphere2)
 
 void SphereToPlane(Sphere *sphere, Plane *plane)
 {
-    Vector3 n = plane->position;
+    Vector3 p1 = plane->position1;
+    Vector3 p2 = plane->position2;
+    Vector3 p3 = plane->position3;
+    Vector3 v1 = Vector3Subtract(p2, p1);
+    Vector3 v2 = Vector3Subtract(p3, p1);
+    Vector3 n = Vector3CrossProduct(v1, v2);
+    n = Vector3Normalize(n);
     Vector3 v = sphere->velocity;
-    Vector3 k = plane->position;
+    float s1 = acosf(Vector3DotProduct(Vector3Negate(Vector3Normalize(v)), n));  
+    printf("%f\n", Vector3Length(n));
+    printf("%f\n", n.y);
+    
+    if( s1 < 90)
+    {
+        printf("Hit Plane\n");
+        printf("%f\n", s1);
+    }
+    
+    Vector3 k = plane->position1;
     Vector3 p = Vector3Add(k, sphere->position);
-    //float s1 = Vector3Angle(n, -v);
-    Vector2 q1 = Vector3Angle(n, p);
-    Vector2 q2 = Vector3Angle(p, k);
-    //Vector3 q3 = Vector3Add(q1, q2);
+    float q1 = acosf(Vector3DotProduct(n, Vector3Normalize(p)));
+    float q2 = acosf(Vector3DotProduct(Vector3Normalize(p), k));
     
     float r = sphere->radius;
+    float d = cosf(s1) * Vector3Length(p);
+    float s = Vector3DotProduct(v, Vector3Negate(n));
     
-    //float d = Mathf.Sin(q2) % p.sqrMagnitude;
-    //float s = Vector3.Angle(v, -n);
-    //float vc = (d - r) / Mathf.Cos(s);
-    
-    //if (q3 < 90 && vc <= v.magnitude)
+    //Vector3 col = Vector3Scale(p, d) * d - r;
+    //Vector3 vc = Vector3Subtract(sphere->position, col);##
+    //vc = Vector3Length((d - r) / acosf(s));
+    //
+    //if (Vector3Length(vc) <= Vector3Length(v))
     //{
-    //    print(q3);
-    //    print(vc);
-    //    print(v);
-    //    print("Hit Plane");
+    //    printf("%f\n", Vector3Length(vc));
+    //    printf("%f\n", Vector3Length(v));
+    //    printf("Hit Plane");
     //    return;
     //}
 }
@@ -131,34 +113,44 @@ int main(void)
     Camera camera = { { 0.0f, 10.0f, 10.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, 45.0f, 0 };
     
     Plane planes[numPlanes];
-    planes[0].position = (Vector3){0.0f, 0.0f, 0.0f};
-    planes[0].size = (Vector2){1.5f, 1.5f};
+    planes[0].position1 = (Vector3){3.0f, 0.0f, -3.0f};
+    planes[0].position2 = (Vector3){-3.0f, 0.0f, -3.0f};
+    planes[0].position3 = (Vector3){3.0f, 0.0f, 3.0f};
     planes[0].planeColour = RED;
     
+    //planes[1].positionX = (Vector3){-5.0f, 0.0f, 0.0f};
+    //planes[1].positionY = (Vector3){0.0f, -10.0f, 0.0f};
+    //planes[1].positionZ = (Vector3){0.0f, 0.0f, -10.0f};
+    //planes[1].planeColour = RED;
+    
     Sphere spheres[numSpheres];
-    spheres[0].position = (Vector3){5.0f, 0.0f, 0.0f};
+    spheres[0].position = (Vector3){0.0f, 5.0f, 0.0f};
     spheres[0].radius = (float){3.0f};
     spheres[0].sphereColour = GREEN;
-    spheres[0].velocity = (Vector3){-2.0f, -0.5f, 0.0f};
+    spheres[0].velocity = (Vector3){-0.5f, -0.5f, 0.0f};
     spheres[0].mass = (float){5.0f};
+    spheres[0].restitution = (float){0.9f};
     
-    spheres[1].position = (Vector3){-5.0f, 0.0f, 0.0f};
-    spheres[1].radius = (float){1.5f};
-    spheres[1].sphereColour = RED;
-    spheres[1].velocity = (Vector3){2.0f, -0.5f, 0.0f};
-    spheres[1].mass = (float){20.0f};
-
-    spheres[2].position = (Vector3){5.0f, 5.0f, 0.0f};
-    spheres[2].radius = (float){1.5f};
-    spheres[2].sphereColour = YELLOW;
-    spheres[2].velocity = (Vector3){-2.0f, -0.5f, 0.0f};
-    spheres[2].mass = (float){5.0f};
-    
-    spheres[3].position = (Vector3){-5.0f, 5.0f, 0.0f};
-    spheres[3].radius = (float){2.5f};
-    spheres[3].sphereColour = PINK;
-    spheres[3].velocity = (Vector3){2.0f, 0.0f, 0.0f};
-    spheres[3].mass = (float){2.0f};
+    //spheres[1].position = (Vector3){-5.0f, 0.0f, 0.0f};
+    //spheres[1].radius = (float){1.5f};
+    //spheres[1].sphereColour = RED;
+    //spheres[1].velocity = (Vector3){2.0f, -0.5f, 0.0f};
+    //spheres[1].mass = (float){20.0f};
+    //spheres[1].restitution = (float){0.9f};
+    //
+    //spheres[2].position = (Vector3){5.0f, 5.0f, 0.0f};
+    //spheres[2].radius = (float){1.5f};
+    //spheres[2].sphereColour = YELLOW;
+    //spheres[2].velocity = (Vector3){-2.0f, -0.5f, 0.0f};
+    //spheres[2].mass = (float){8.0f};
+    //spheres[2].restitution = (float){0.9f};
+    //
+    //spheres[3].position = (Vector3){-5.0f, 5.0f, 0.0f};
+    //spheres[3].radius = (float){2.5f};
+    //spheres[3].sphereColour = PINK;
+    //spheres[3].velocity = (Vector3){2.0f, 0.0f, 0.0f};
+    //spheres[3].mass = (float){2.0f};
+    //spheres[3].restitution = (float){0.9f};
     
     while (!WindowShouldClose())
     {
@@ -169,8 +161,8 @@ int main(void)
                 SphereToSphere(&spheres[i], &spheres[j]);
             }
         }
-
-        //SphereToSphere(&spheres[0], &spheres[1]);
+          
+        SphereToPlane(&spheres[0], &planes[0]);  
         
         BeginDrawing();
 
@@ -181,11 +173,15 @@ int main(void)
             for(int i = 0; i < numSpheres; i++)
             {
                 DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].sphereColour);
-                DrawPlane(planes[0].position, planes[0].size, planes[0].planeColour);
                 DrawSphereWires(spheres[i].position, spheres[i].radius, 16, 16, BLACK);
                 spheres[i].position = Vector3Add(spheres[i].position, Vector3Scale(spheres[i].velocity, GetFrameTime()));
             }
                          
+            for(int i = 0; i < numPlanes; i++)
+            {
+                DrawTriangle3D(planes[i].position1, planes[i].position2, planes[i].position3, planes[i].planeColour);
+            }             
+            
             EndMode3D();
 
             DrawFPS(10, 10);
